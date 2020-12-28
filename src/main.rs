@@ -21,9 +21,9 @@ fn main() {
     let mut row_change = 0;
     let mut row_direction = 1;
 
-    let longboi_start = Coordinate {row: max_row - 20, col: 3};
-    let longboi_end = Coordinate {row: max_row - 15, col: 3};
-    let longboi_change_limit = max_col - longboi_start.col - 5;
+    let longboi_start = Coordinate {row: max_row - 20, col: max_col / 2};
+    let longboi_end = Coordinate {row: max_row - 15, col: 5};
+    let longboi_change_limit = max_col - 10;
     let mut longboi_change = 0;
     let mut longboi_direction = 1;
 

@@ -8,6 +8,7 @@ impl CursesHandle {
         cbreak();
         noecho();
         nodelay(stdscr(), true);
+        keypad(stdscr(), true);
 
         return CursesHandle{}
     }

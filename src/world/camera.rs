@@ -1,8 +1,8 @@
-use std::f64::consts::{FRAC_PI_2, PI};
+use std::f64::consts::FRAC_PI_2;
 
+use super::util::normalize_range;
+use super::util::TWO_PI;
 use super::world_entity::WorldEntity;
-
-const TWO_PI: f64 = 2.0 * PI;
 
 #[derive(Copy, Clone)]
 pub struct Camera {
@@ -64,13 +64,14 @@ impl Camera {
 
     /// Returns true if the camera can see the other entity
     pub fn can_see(&self, other: & dyn WorldEntity) -> bool {
-        (0.0..self.fov_angle).contains(&self.view_angle_from_left(other)) && self.distance_to(other) < self.horizon_distance
+        let view_angle_from_left = normalize_range(self.view_angle_from_left(other), 0.0..TWO_PI);
+
+        return (0.0..self.fov_angle).contains(&view_angle_from_left) && self.distance_to(other) < self.horizon_distance
     }
 
     /// Returns an updated camera, moved forward diff_forward and rotated diff_angle
     pub fn update_cam(&self, diff_forward: f64, diff_angle: f64) -> Camera {
-        let angle_remainder = (self.facing_direction + diff_angle) % TWO_PI;
-        let new_angle = if angle_remainder >= 0.0 { angle_remainder } else { angle_remainder + TWO_PI };
+        let new_angle = normalize_range(self.facing_direction + diff_angle, 0.0..TWO_PI);
 
         let x_change = diff_forward * new_angle.cos();
         let y_change = diff_forward * new_angle.sin();

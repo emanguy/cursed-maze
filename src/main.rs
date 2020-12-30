@@ -7,13 +7,33 @@ use ncurses::*;
 use curses_util::draw_2d::{Coordinate, draw_line};
 use curses_util::lifecycle::CursesHandle;
 
+use crate::world::camera::Camera;
+use crate::world::pillar::Pillar;
+use crate::world::world_entity::WorldEntity;
+
 mod curses_util;
+mod world;
+mod input;
+
+fn draw_pillar(screen_rows: i32, screen_cols: i32, camera: &Camera, pillar: &Pillar) {
+    let pillar_dist = camera.distance_to(pillar);
+    let pillar_ang = camera.view_angle_from_left(pillar);
+    let half_screen_rows = screen_rows / 2;
+
+    let horizon_rise = half_screen_rows as f64 * (1.0 - (pillar_dist - camera.fill_screen_distance()) / (camera.horizon_distance() - camera.fill_screen_distance()));
+    let pillar_top = (half_screen_rows as f64 - horizon_rise) as i32;
+    let pillar_bottom = (half_screen_rows as f64 + horizon_rise) as i32;
+    let pillar_column = ((pillar_ang / camera.fov_angle()) * screen_cols as f64) as i32;
+
+    let line_top = Coordinate { row: pillar_top, col: pillar_column };
+    let line_bottom = Coordinate { row: pillar_bottom, col: pillar_column };
+
+    draw_line(line_top, line_bottom);
+}
 
 fn main() {
     // When the curses handle falls out of scope it'll turn off curses
     let _curse_handle = CursesHandle::create();
-    let hello_string = String::from("Hello, curses!");
-    let half_strlen = (hello_string.len() as i32) / 2;
 
     let mut max_row = 0;
     let mut max_col = 0;
@@ -21,66 +41,34 @@ fn main() {
 
     let input = DeviceState::new();
 
-    let original_start = Coordinate {row: 3, col: 3};
-    let original_end = Coordinate {row: 10, col: 15};
-    let mut row_change = 0;
-    let mut row_direction = 1;
+    let cam = Camera::new();
+    let pillar1 = Pillar::at(5.0, 2.5);
+    let pillar2 = Pillar::at(25.0, 0.0);
+    let pillar3 = Pillar::at(50.0, -25.0);
+    let pillar4 = Pillar::at(55.0, 3.0);
 
-    let longboi_start = Coordinate {row: max_row - 20, col: max_col / 2};
-    let longboi_end = Coordinate {row: max_row - 15, col: 5};
-    let longboi_change_limit = max_col - 10;
-    let mut longboi_change = 0;
-    let mut longboi_direction = 1;
+    clear();
+    draw_pillar(max_row, max_col, &cam, &pillar1);
+    draw_pillar(max_row, max_col, &cam, &pillar2);
+    draw_pillar(max_row, max_col, &cam, &pillar3);
+    draw_pillar(max_row, max_col, &cam, &pillar4);
+    refresh();
 
     loop {
-        let current_start = original_start.coord_shift(row_change, 0);
-        let current_end = original_end.coord_shift(-row_change, 0);
-        let current_long_end = longboi_end.coord_shift(0, longboi_change);
-
-        // Do drawing
-        clear();
-        mvprintw(max_row / 2, (max_col / 2) - half_strlen, &hello_string);
-        draw_line(current_start, current_end);
-        draw_line(longboi_start, current_long_end);
-
-        // Update end positions of line
-        row_change = row_change + row_direction;
-        longboi_change = longboi_change + longboi_direction;
-
-        if row_change == 0 || row_change == 7 {
-            row_direction = -row_direction;
-        }
-        if longboi_change == 0 || longboi_change == longboi_change_limit {
-            longboi_direction = -longboi_direction;
-        }
-
-
         // Check for user quit
         let keyboard_state = input.get_keys();
         let mut quit = false;
-        let mut pressed_keys = String::from("Commands: ");
 
-        if !pressed_keys.is_empty() {
-            for key in keyboard_state {
-                match key {
-                    Keycode::Up | Keycode::W => pressed_keys = pressed_keys + "FORWARD,",
-                    Keycode::Down | Keycode::S => pressed_keys = pressed_keys + "BACKWARD,",
-                    Keycode::Left | Keycode::A => pressed_keys = pressed_keys + "LEFT,",
-                    Keycode::Right | Keycode::D => pressed_keys = pressed_keys + "RIGHT,",
-                    Keycode::Enter => {
-                        pressed_keys = pressed_keys + "QUIT,";
-                        quit = true;
-                    },
-                    _ => pressed_keys = pressed_keys + format!("OTHER({}),", key).as_str(),
-                };
-            }
+        for key in keyboard_state {
+            match key {
+                Keycode::Enter => {
+                    quit = true;
+                },
+                _ => {},
+            };
         }
         // Consume input so it's not redirected to the terminal
         getch();
-
-        mvprintw(max_row-1, 0, pressed_keys.as_str());
-        refresh();
-
         // Wait till next frame
         sleep(Duration::from_millis(50));
 

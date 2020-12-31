@@ -1,5 +1,7 @@
 use std::f64::consts::FRAC_PI_2;
 
+use crate::world::world_entity::ViewableEntity;
+
 use super::util::normalize_range;
 use super::util::TWO_PI;
 use super::world_entity::WorldEntity;
@@ -63,10 +65,15 @@ impl Camera {
     }
 
     /// Returns true if the camera can see the other entity
-    pub fn can_see(&self, other: & dyn WorldEntity) -> bool {
+    pub fn can_see(&self, other: &impl WorldEntity) -> bool {
         let view_angle_from_left = normalize_range(self.view_angle_from_left(other), 0.0..TWO_PI);
 
         return (0.0..self.fov_angle).contains(&view_angle_from_left) && self.distance_to(other) < self.horizon_distance
+    }
+
+    /// Returns true if the camera can see the other entity using the entity's implementation
+    pub fn can_see_viewable(&self, other: &impl ViewableEntity) -> bool {
+        other.in_camera_view(self)
     }
 
     /// Returns an updated camera, moved forward diff_forward and rotated diff_angle

@@ -1,5 +1,6 @@
-use std::cmp::{min, max};
-use ncurses::{mvaddch, chtype};
+use std::cmp::{max, min};
+
+use ncurses::{chtype, mvaddch};
 
 #[derive(Copy, Clone)]
 pub struct Coordinate {
@@ -13,7 +14,7 @@ impl Coordinate {
     }
 }
 
-pub fn draw_line(from: Coordinate, to: Coordinate) {
+pub fn draw_line(from: Coordinate, to: Coordinate, fill_char: char) {
     let (from_lowcol, to_highcol) = if from.col < to.col {
         (from, to)
     } else {
@@ -29,7 +30,7 @@ pub fn draw_line(from: Coordinate, to: Coordinate) {
         let highest_row = max(from_lowcol.row, to_highcol.row);
 
         for row in lowest_row..highest_row {
-            mvaddch(row, from_lowcol.col, '#' as chtype);
+            mvaddch(row, from_lowcol.col, fill_char as chtype);
         }
         return;
     }
@@ -42,7 +43,7 @@ pub fn draw_line(from: Coordinate, to: Coordinate) {
     // For each column, draw a pixel
     for idx in 0..col_change {
         let current_col = from_lowcol.col + idx;
-        mvaddch(current_row, current_col, '#' as chtype);
+        mvaddch(current_row, current_col, fill_char as chtype);
         total_row_change = total_row_change + row_change_per_col;
         let absolute_row_change = f64::abs(total_row_change);
 
@@ -62,3 +63,6 @@ pub fn draw_line(from: Coordinate, to: Coordinate) {
     }
 }
 
+pub fn fill_region(corner1: Coordinate, corner2: Coordinate, corner3: Coordinate, corner4: Coordinate) {
+
+}

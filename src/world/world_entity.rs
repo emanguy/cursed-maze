@@ -1,3 +1,5 @@
+use super::camera::Camera;
+use super::util::{normalize_range, TWO_PI};
 
 pub trait WorldEntity {
     /// The x position of the entity
@@ -12,4 +14,8 @@ pub trait WorldEntity {
 
         (x_diff * x_diff - y_diff * y_diff).sqrt()
     }
+}
+
+pub trait ViewableEntity {
+    fn in_camera_view(&self, camera: &Camera) -> bool;
 }

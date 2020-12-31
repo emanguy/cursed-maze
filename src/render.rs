@@ -20,6 +20,12 @@ pub struct Scene {
     screen_cols: i32,
 }
 
+#[derive(Copy, Clone)]
+struct PillarCoords {
+    line_top: Coordinate,
+    line_bottom: Coordinate,
+}
+
 impl Scene {
     /// Creates a new scene with the given screen dimensions
     pub fn with_dimensions(screen_rows: i32, screen_cols: i32) -> Scene {
@@ -31,14 +37,16 @@ impl Scene {
 
         for pillar in pillars {
             if camera.can_see(pillar) {
-                self.draw_pillar(camera, pillar);
+                let PillarCoords { line_top, line_bottom} = self.calculate_pillar_coords(camera, pillar);
+                draw_line(line_top, line_bottom, '#');
             }
         }
 
         refresh();
     }
 
-    fn draw_pillar(&self, camera: &Camera, pillar: &Pillar) {
+
+    fn calculate_pillar_coords(&self, camera: &Camera, pillar: &Pillar) -> PillarCoords {
         let pillar_dist = camera.distance_to(pillar);
         let pillar_ang = normalize_range(camera.view_angle_from_left(pillar), 0.0..TWO_PI);
         let half_screen_rows = self.screen_rows / 2;
@@ -51,7 +59,7 @@ impl Scene {
         let line_top = Coordinate { row: pillar_top, col: pillar_column };
         let line_bottom = Coordinate { row: pillar_bottom, col: pillar_column };
 
-        draw_line(line_top, line_bottom);
+        return PillarCoords { line_top, line_bottom };
     }
 }
 

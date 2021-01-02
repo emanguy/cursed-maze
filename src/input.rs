@@ -30,7 +30,7 @@ pub fn move_camera(input: &DeviceState, camera_entity: &Camera) -> (Camera, Prog
             Keycode::S | Keycode::Down => forward_change = forward_change - 4.0 / RENDER_FPS,
             Keycode::A | Keycode::Left => angle_change = angle_change + FRAC_PI_2 / RENDER_FPS,
             Keycode::D | Keycode::Right => angle_change = angle_change - FRAC_PI_2 / RENDER_FPS,
-            Keycode::Enter | Keycode::Escape => command = ProgramCommand::Quit,
+            Keycode::Escape => command = ProgramCommand::Quit,
             _ => {},
         }
     }

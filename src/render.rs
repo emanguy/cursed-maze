@@ -5,7 +5,7 @@ use ncurses::*;
 
 use super::curses_util::draw_2d::*;
 use super::world::camera::Camera;
-use super::world::pillar::Pillar;
+use super::world::pillar::{Pillar, Wall};
 use super::world::util::{normalize_range, TWO_PI};
 use super::world::world_entity::WorldEntity;
 
@@ -32,13 +32,36 @@ impl Scene {
         Scene { screen_rows, screen_cols }
     }
 
-    pub fn render_frame(&self, camera: &Camera, pillars: &Vec<Pillar>) {
+    pub fn render_frame(&self, camera: &Camera, walls: &Vec<Wall>) {
         clear();
 
-        for pillar in pillars {
-            if camera.can_see(pillar) {
-                let PillarCoords { line_top, line_bottom} = self.calculate_pillar_coords(camera, pillar);
-                draw_line(line_top, line_bottom, '#');
+        for wall in walls {
+            if camera.can_see_viewable(wall) {
+                let pillar1_screen_coords = self.calculate_pillar_coords(camera, wall.pillar1());
+                let pillar2_screen_coords = self.calculate_pillar_coords(camera, wall.pillar2());
+
+                let (left_pillar_coords, right_pillar_coords) = if pillar1_screen_coords.line_top.col <= pillar2_screen_coords.line_top.col {
+                    (&pillar1_screen_coords, &pillar2_screen_coords)
+                } else {
+                    (&pillar2_screen_coords, &pillar1_screen_coords)
+                };
+
+                // Only fill if there is a space of at least one column between the pillars
+                if right_pillar_coords.line_top.col - left_pillar_coords.line_top.col > 2 {
+                    let top_left_fillshift = left_pillar_coords.line_top.coord_shift(1, 1);
+                    let bottom_left_fillshift = left_pillar_coords.line_bottom.coord_shift(-1, 1);
+                    let top_right_fillshift = right_pillar_coords.line_top.coord_shift(1, -1);
+                    let bottom_right_fillshift = right_pillar_coords.line_bottom.coord_shift(-1, -1);
+
+                    // TODO do something with the results here
+                    fill_triangle(top_left_fillshift, bottom_left_fillshift, top_right_fillshift, '-');
+                    fill_triangle(bottom_left_fillshift, top_right_fillshift, bottom_right_fillshift, '-');
+                }
+
+                draw_line(pillar1_screen_coords.line_top, pillar1_screen_coords.line_bottom, '#');
+                draw_line(pillar2_screen_coords.line_top, pillar2_screen_coords.line_bottom, '#');
+                draw_line(pillar1_screen_coords.line_top, pillar2_screen_coords.line_top, '#');
+                draw_line(pillar1_screen_coords.line_bottom, pillar2_screen_coords.line_bottom, '#');
             }
         }
 

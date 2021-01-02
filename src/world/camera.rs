@@ -57,7 +57,7 @@ impl Camera {
     }
 
     /// Determines the angle from the left side of the view frustum that the entity appears at to the camera
-    pub fn view_angle_from_left(&self, other: & dyn WorldEntity) -> f64 {
+    pub fn view_angle_from_left(&self, other: &impl WorldEntity) -> f64 {
         let half_view_angle = self.fov_angle / 2.0;
         let camera_vector_angle = (other.y_pos() - self.y_pos()).atan2(other.x_pos() - self.x_pos());
 

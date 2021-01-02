@@ -1,4 +1,4 @@
-use std::cmp::{max, min, Ordering};
+use std::cmp::{max, min};
 
 use ncurses::{chtype, mvaddch};
 
@@ -61,7 +61,7 @@ pub fn draw_line(from: Coordinate, to: Coordinate, fill_char: char) {
                 current_row = current_row + row_move;
             }
 
-            total_row_change -= ((total_row_change as i32) as f64);
+            total_row_change -= (total_row_change as i32) as f64;
         }
     }
 }

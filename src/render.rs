@@ -1,3 +1,4 @@
+use std::f32::consts::FRAC_PI_2;
 use std::thread::sleep;
 use std::time::Duration;
 
@@ -71,13 +72,14 @@ impl Scene {
 
     fn calculate_pillar_coords(&self, camera: &Camera, pillar: &Pillar) -> PillarCoords {
         let pillar_dist = camera.distance_to(pillar);
-        let pillar_ang = normalize_range(camera.view_angle_from_left(pillar), 0.0..TWO_PI);
+        let pillar_ang = normalize_range(camera.view_angle_from_center(pillar), (-FRAC_PI_2 as f64)..(TWO_PI - FRAC_PI_2 as f64));
         let half_screen_rows = self.screen_rows / 2;
+        let half_screen_cols = self.screen_cols / 2;
 
         let horizon_rise = half_screen_rows as f64 * (1.0 - (pillar_dist - camera.fill_screen_distance()) / (camera.horizon_distance() - camera.fill_screen_distance()));
         let pillar_top = (half_screen_rows as f64 - horizon_rise) as i32;
         let pillar_bottom = (half_screen_rows as f64 + horizon_rise) as i32;
-        let pillar_column = ((pillar_ang / camera.fov_angle()) * self.screen_cols as f64) as i32;
+        let pillar_column = ((pillar_ang / camera.fov_angle()) * self.screen_cols as f64) as i32 + half_screen_cols;
 
         let line_top = Coordinate { row: pillar_top, col: pillar_column };
         let line_bottom = Coordinate { row: pillar_bottom, col: pillar_column };

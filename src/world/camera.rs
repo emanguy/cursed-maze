@@ -1,4 +1,4 @@
-use std::f64::consts::FRAC_PI_2;
+use std::f64::consts::{FRAC_PI_2, FRAC_PI_4};
 
 use crate::world::world_entity::ViewableEntity;
 
@@ -34,8 +34,8 @@ impl Camera {
             y_pos: 0.0,
             facing_direction: 0.0,
             fov_angle: FRAC_PI_2,
-            fill_screen_distance: 1.0,
-            horizon_distance: 60.0,
+            fill_screen_distance: 2.0,
+            horizon_distance: 15.0,
         }
     }
 
@@ -56,19 +56,20 @@ impl Camera {
         self.horizon_distance
     }
 
-    /// Determines the angle from the left side of the view frustum that the entity appears at to the camera
-    pub fn view_angle_from_left(&self, other: &impl WorldEntity) -> f64 {
-        let half_view_angle = self.fov_angle / 2.0;
+    /// Determines the angle from the center of the view frustum that the entity appears at to the camera
+    pub fn view_angle_from_center(&self, other: &impl WorldEntity) -> f64 {
         let camera_vector_angle = (other.y_pos() - self.y_pos()).atan2(other.x_pos() - self.x_pos());
 
-        return half_view_angle - (camera_vector_angle - self.facing_direction);
+        return self.facing_direction - camera_vector_angle;
     }
 
     /// Returns true if the camera can see the other entity
     pub fn can_see(&self, other: &impl WorldEntity) -> bool {
-        let view_angle_from_left = normalize_range(self.view_angle_from_left(other), 0.0..TWO_PI);
+        let angle_to_other = self.view_angle_from_center(other);
+        let view_angle_from_center = normalize_range(angle_to_other, (-FRAC_PI_2 as f64)..(TWO_PI - FRAC_PI_2 as f64));
+        let half_fov_angle = self.fov_angle / 2.0;
 
-        return (0.0..self.fov_angle).contains(&view_angle_from_left) && self.distance_to(other) < self.horizon_distance
+        return (-half_fov_angle..half_fov_angle).contains(&view_angle_from_center) && self.distance_to(other) < self.horizon_distance
     }
 
     /// Returns true if the camera can see the other entity using the entity's implementation

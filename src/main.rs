@@ -25,13 +25,40 @@ fn main() {
 
     let scene = Scene::with_dimensions(max_row, max_col);
     let mut cam = Camera::new();
-    let pillar1 = Pillar::at(5.0, 2.5);
-    let pillar2 = Pillar::at(25.0, 0.0);
-    let pillar3 = Pillar::at(50.0, -25.0);
-    let pillar4 = Pillar::at(55.0, 3.0);
-    let wall1 = Wall::from_pillars(&pillar1, &pillar2);
-    let wall2 = Wall::from_pillars(&pillar3, &pillar4);
-    let walls = vec!(wall2, wall1);
+    let mut pillar_set_1: Vec<Pillar> = Vec::new();
+    let mut pillar_set_2: Vec<Pillar> = Vec::new();
+
+    // Pillar set 1 horizontal segment
+    for x_coord in (0..=8).step_by(2) {
+        pillar_set_1.push(Pillar::at(x_coord as f64, 2.0));
+    }
+
+    // Pillar set 1 vertical segment
+    for y_coord in (4..=10).step_by(2) {
+        pillar_set_1.push(Pillar::at(8.0, y_coord as f64))
+    }
+
+    // Pillar set 2 horizontal segment
+    for x_coord in (0..=12).step_by(2) {
+        pillar_set_2.push(Pillar::at(x_coord as f64, -2.0));
+    }
+
+    // Pillar set 2 vertical segment
+    for y_coord in (0..=10).step_by(2) {
+        pillar_set_2.push(Pillar::at(12.0, y_coord as f64));
+    }
+
+    // Create all walls from pillars
+    let mut walls: Vec<Wall> = Vec::new();
+
+    for pillar_idx in 0..(pillar_set_1.len() - 1) {
+        walls.push(Wall::from_pillars(pillar_set_1.get(pillar_idx).unwrap(), pillar_set_1.get(pillar_idx + 1).unwrap()));
+    }
+    for pillar_idx in 0..(pillar_set_2.len() - 1) {
+        walls.push(Wall::from_pillars(pillar_set_2.get(pillar_idx).unwrap(), pillar_set_2.get(pillar_idx + 1).unwrap()));
+    }
+
+    walls.reverse();
 
     loop {
         let (new_cam, command) = move_camera(&input, &cam);

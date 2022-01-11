@@ -11,6 +11,7 @@ mod curses_util;
 mod world;
 mod input;
 mod render;
+mod maze;
 
 
 fn main() {

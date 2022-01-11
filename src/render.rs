@@ -1,4 +1,4 @@
-use std::f32::consts::FRAC_PI_2;
+use std::f64::consts::PI;
 use std::thread::sleep;
 use std::time::Duration;
 
@@ -7,7 +7,7 @@ use ncurses::*;
 use super::curses_util::draw_2d::*;
 use super::world::camera::Camera;
 use super::world::pillar::{Pillar, Wall};
-use super::world::util::{normalize_range, TWO_PI};
+use super::world::util::{normalize_range};
 use super::world::world_entity::WorldEntity;
 
 pub const RENDER_FPS: f64 = 30.0;
@@ -55,8 +55,8 @@ impl Scene {
                     let bottom_right_fillshift = right_pillar_coords.line_bottom.coord_shift(-1, -1);
 
                     // TODO do something with the results here
-                    fill_triangle(top_left_fillshift, bottom_left_fillshift, top_right_fillshift, '-');
-                    fill_triangle(bottom_left_fillshift, top_right_fillshift, bottom_right_fillshift, '-');
+                    fill_triangle(top_left_fillshift, bottom_left_fillshift, top_right_fillshift, '.');
+                    fill_triangle(bottom_left_fillshift, top_right_fillshift, bottom_right_fillshift, '.');
                 }
 
                 draw_line(pillar1_screen_coords.line_top, pillar1_screen_coords.line_bottom, '#');
@@ -72,7 +72,7 @@ impl Scene {
 
     fn calculate_pillar_coords(&self, camera: &Camera, pillar: &Pillar) -> PillarCoords {
         let pillar_dist = camera.distance_to(pillar);
-        let pillar_ang = normalize_range(camera.view_angle_from_center(pillar), (-FRAC_PI_2 as f64)..(TWO_PI - FRAC_PI_2 as f64));
+        let pillar_ang = normalize_range(camera.view_angle_from_center(pillar), -PI..PI);
         let half_screen_rows = self.screen_rows / 2;
         let half_screen_cols = self.screen_cols / 2;
 

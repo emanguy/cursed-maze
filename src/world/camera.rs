@@ -1,4 +1,4 @@
-use std::f64::consts::{FRAC_PI_2, FRAC_PI_4};
+use std::f64::consts::{FRAC_PI_2, PI};
 
 use crate::world::world_entity::ViewableEntity;
 
@@ -66,7 +66,7 @@ impl Camera {
     /// Returns true if the camera can see the other entity
     pub fn can_see(&self, other: &impl WorldEntity) -> bool {
         let angle_to_other = self.view_angle_from_center(other);
-        let view_angle_from_center = normalize_range(angle_to_other, (-FRAC_PI_2 as f64)..(TWO_PI - FRAC_PI_2 as f64));
+        let view_angle_from_center = normalize_range(angle_to_other, -PI..PI);
         let half_fov_angle = self.fov_angle / 2.0;
 
         return (-half_fov_angle..half_fov_angle).contains(&view_angle_from_center) && self.distance_to(other) < self.horizon_distance

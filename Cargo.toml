@@ -9,3 +9,4 @@ edition = "2018"
 [dependencies]
 ncurses = "5.99.0"
 device_query = "0.2.7"
+rand = "0.8.4"

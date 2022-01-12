@@ -1,5 +1,7 @@
 use std::collections::HashSet;
 use std::hash::{Hash, Hasher};
+use rand::{Rng, thread_rng};
+use crate::maze::generation::MazeConstructError::ParameterInvalid;
 
 /// A MazeCoordinate represents the coordinates of a single cell of the maze. Cells are laid
 /// out in a grid based the number of rows and columns present. Cells are ephemeral and only kind of exist
@@ -9,6 +11,13 @@ use std::hash::{Hash, Hasher};
 pub struct MazeCoordinate {
     row: i32,
     col: i32,
+}
+
+impl MazeCoordinate {
+    pub fn random_within(rows: i32, cols: i32) -> MazeCoordinate {
+        let rng = thread_rng();
+
+    }
 }
 
 /// A MazeWall is a bidirectional edge between two cells in the maze representing an impassable wall.
@@ -137,5 +146,79 @@ pub struct Maze {
     finish: MazeCoordinate,
     rows: i32,
     cols: i32,
-    wall_edges: HashSet<MazeCoordinate>
+    wall_edges: HashSet<MazeWall>
+}
+
+#[derive(Debug)]
+pub enum MazeParam {
+    Row,
+    Col,
+    PortalSpacing,
+}
+
+#[derive(Debug)]
+pub enum MazeConstructError {
+    ParameterInvalid { param: MazeParam, value: i32 },
+    MazeTooSmallForSpacing { rows: i32, cols: i32, portal_space: i32 },
+}
+
+struct MazePortals {
+    start: MazeCoordinate,
+    end: MazeCoordinate,
+}
+
+impl Maze {
+    /// Asserts that a parameter for the Maze constructor is a positive value. Returns an error
+    /// otherwise.
+    fn assert_positive(param: MazeParam, value: i32) -> Result<(), MazeConstructError> {
+        if value <= 0 {
+            return Err(MazeConstructError::ParameterInvalid { param, value });
+        }
+
+        return Ok(())
+    }
+
+    /// Generate the initial set of walls in the maze where every cell in the grid is
+    /// surrounded on all sides by walls
+    fn generate_initial_walls(rows: i32, cols: i32) -> HashSet<MazeWall> {
+        let mut wall_set: HashSet<MazeWall> = HashSet::new();
+
+        for row in 0..(rows - 1) {
+            for col in 0..(cols - 1) {
+                let next_row = row + 1;
+                let next_col = col + 1;
+
+                wall_set.insert(MazeWall {
+                    coord1: MazeCoordinate { row, col },
+                    coord2: MazeCoordinate { row, col: next_col },
+                });
+                wall_set.insert(MazeWall {
+                    coord1: MazeCoordinate { row, col },
+                    coord2: MazeCoordinate { row: next_row, col },
+                });
+            }
+        }
+
+        return wall_set;
+    }
+
+    /// Selects the start and end cells for the maze. [portal_space] asserts the minimum required
+    /// manhattan distance between the start and end portal.
+    fn select_portal_coordinates(rows: i32, cols: i32, portal_space: i32) -> MazePortals {
+
+    }
+
+    pub fn new(rows: i32, cols: i32, portal_space: i32) -> Result<Maze, MazeConstructError> {
+        Self::assert_positive(MazeParam::Row, rows)?;
+        Self::assert_positive(MazeParam::Col, cols)?;
+        Self::assert_positive(MazeParam::PortalSpacing, portal_space)?;
+
+        if rows + cols < portal_space {
+            return Err(MazeConstructError::MazeTooSmallForSpacing { rows, cols, portal_space });
+        }
+
+        let mut initial_walls = Self::generate_initial_walls(rows, cols);
+
+        return Ok();
+    }
 }

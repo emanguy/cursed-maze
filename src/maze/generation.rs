@@ -1,6 +1,12 @@
+use std::borrow::BorrowMut;
 use std::collections::HashSet;
 use std::hash::{Hash, Hasher};
-use rand::{Rng, thread_rng};
+use std::rc::Rc;
+
+use rand::distributions::Uniform;
+use rand::distributions::uniform::SampleUniform;
+use rand::prelude::*;
+
 use crate::maze::generation::MazeConstructError::ParameterInvalid;
 
 /// A MazeCoordinate represents the coordinates of a single cell of the maze. Cells are laid
@@ -14,8 +20,22 @@ pub struct MazeCoordinate {
 }
 
 impl MazeCoordinate {
-    pub fn random_within(rows: i32, cols: i32) -> MazeCoordinate {
-        let rng = thread_rng();
+    pub fn random<T: Rng>(row_distribution: &Uniform<i32>, col_distribution: &Uniform<i32>, rng: &mut T) -> MazeCoordinate {
+        let row = row_distribution.sample(rng);
+        let col = col_distribution.sample(rng);
+
+        MazeCoordinate { row, col }
+    }
+
+    pub fn manhattan_to(&self, other: &MazeCoordinate) -> i32 {
+        (other.row - self.row).abs() + (other.col - self.col).abs()
+    }
+}
+
+#[cfg(Test)]
+mod MazeCoordinateTests {
+    #[test]
+    fn manhattan_distance_is_accurate() {
 
     }
 }
@@ -64,9 +84,10 @@ impl Hash for MazeWall {
 }
 
 #[cfg(test)]
-mod maze_wall_tests {
+mod MazeWallTests {
     use std::collections::hash_map::DefaultHasher;
     use std::hash::{Hash, Hasher};
+
     use super::{Maze, MazeCoordinate, MazeWall};
 
     /// Creates a tuple of two equivalent [MazeWall]s which have their coordinates reversed
@@ -205,7 +226,19 @@ impl Maze {
     /// Selects the start and end cells for the maze. [portal_space] asserts the minimum required
     /// manhattan distance between the start and end portal.
     fn select_portal_coordinates(rows: i32, cols: i32, portal_space: i32) -> MazePortals {
+        let mut shared_rng_engine = thread_rng();
+        let row_distribution = Uniform::from(0..rows);
+        let col_distribution = Uniform::from(0..cols);
 
+        loop {
+            let point1 = MazeCoordinate::random(&row_distribution, &col_distribution, &mut shared_rng_engine);
+            let point2 = MazeCoordinate::random(&row_distribution, &col_distribution, &mut shared_rng_engine);
+            let manhattan_distance = point1.manhattan_to(&point2);
+
+            if manhattan_distance >= portal_space {
+                return MazePortals { start: point1, end: point2 };
+            }
+        }
     }
 
     pub fn new(rows: i32, cols: i32, portal_space: i32) -> Result<Maze, MazeConstructError> {

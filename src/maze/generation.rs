@@ -1,16 +1,10 @@
-use std::borrow::BorrowMut;
 use std::collections::{HashSet, VecDeque};
 use std::fmt::{Display, Formatter};
 use std::hash::{Hash, Hasher};
-use std::ops::Add;
-use std::rc::Rc;
-use ncurses::ll::box_;
 
 use rand::distributions::Uniform;
-use rand::distributions::uniform::SampleUniform;
 use rand::prelude::*;
-
-use crate::maze::generation::MazeConstructError::ParameterInvalid;
+use thiserror::Error;
 
 /// A MazeCoordinate represents the coordinates of a single cell of the maze. Cells are laid
 /// out in a grid based the number of rows and columns present. Cells are ephemeral and only kind of exist
@@ -18,8 +12,8 @@ use crate::maze::generation::MazeConstructError::ParameterInvalid;
 #[derive(Eq, PartialEq, Hash, Copy, Clone)]
 #[cfg_attr(test, derive(Debug))]
 pub struct MazeCoordinate {
-    row: i32,
-    col: i32,
+    pub row: i32,
+    pub col: i32,
 }
 
 impl MazeCoordinate {
@@ -65,8 +59,8 @@ mod maze_coordinate_tests {
 #[derive(Eq, Copy, Clone)]
 #[cfg_attr(test, derive(Debug))]
 pub struct MazeWall {
-    coord1: MazeCoordinate,
-    coord2: MazeCoordinate,
+    pub coord1: MazeCoordinate,
+    pub coord2: MazeCoordinate,
 }
 
 impl PartialEq for MazeWall {
@@ -209,6 +203,7 @@ pub struct Maze {
     wall_edges: HashSet<MazeWall>
 }
 
+
 #[derive(Debug)]
 pub enum MazeParam {
     Row,
@@ -216,9 +211,11 @@ pub enum MazeParam {
     PortalSpacing,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum MazeConstructError {
+    #[error("A parameter was invalid: {param:?} cannot be {value:?}")]
     ParameterInvalid { param: MazeParam, value: i32 },
+    #[error("Maze was too small for the space between the portals (rows: {rows:?} cols: {cols:?} spacing: {portal_space:?}")]
     MazeTooSmallForSpacing { rows: i32, cols: i32, portal_space: i32 },
 }
 
@@ -228,6 +225,22 @@ struct MazePortals {
 }
 
 impl Maze {
+    pub fn start(&self) -> &MazeCoordinate {
+        &self.start
+    }
+    pub fn finish(&self) -> &MazeCoordinate {
+        &self.finish
+    }
+    pub fn rows(&self) -> i32 {
+        self.rows
+    }
+    pub fn cols(&self) -> i32 {
+        self.cols
+    }
+    pub fn wall_edges(&self) -> &HashSet<MazeWall> {
+        &self.wall_edges
+    }
+
     /// Asserts that a parameter for the Maze constructor is a positive value. Returns an error
     /// otherwise.
     fn assert_positive(param: MazeParam, value: i32) -> Result<(), MazeConstructError> {

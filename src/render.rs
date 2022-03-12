@@ -2,6 +2,8 @@ use std::f64::consts::PI;
 use std::thread::sleep;
 use std::time::Duration;
 
+use ordered_float::NotNan;
+
 use ncurses::*;
 
 use super::curses_util::draw_2d::*;
@@ -36,7 +38,21 @@ impl Scene {
     pub fn render_frame(&self, camera: &Camera, walls: &Vec<Wall>) {
         clear();
 
-        for wall in walls {
+        let mut visible_walls: Vec<&Wall> = walls.iter().filter(|&wall| camera.can_see_viewable(wall)).collect();
+        visible_walls.sort_by_cached_key(|&wall| {
+            let wall_dist1 = camera.distance_to(wall.pillar1());
+            let wall_dist2 = camera.distance_to(wall.pillar2());
+
+            let lower_float = if wall_dist1 < wall_dist2 {
+                wall_dist1
+            } else {
+                wall_dist2
+            };
+            NotNan::new(lower_float).unwrap()
+        });
+        visible_walls.reverse();
+
+        for wall in visible_walls {
             if camera.can_see_viewable(wall) {
                 let pillar1_screen_coords = self.calculate_pillar_coords(camera, wall.pillar1());
                 let pillar2_screen_coords = self.calculate_pillar_coords(camera, wall.pillar2());

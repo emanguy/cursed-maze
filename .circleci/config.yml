@@ -11,16 +11,15 @@ commands:
         description: The name of the binary to install through cargo
     steps:
       - restore_cache:
-          key: install-v1
+          key: install-v1-<< parameters.package >>
       - run:
           name: Install << parameters.package >>
           command: |
             cargo install << parameters.package >>
       - save_cache:
-          key: install-v1
+          key: install-v1-<< parameters.package >>
           paths:
-            - ~/.cargo/bin/
-            - ~/.cargo/registry/cache
+            - ~/.cargo
 
 jobs:
   build-and-test:

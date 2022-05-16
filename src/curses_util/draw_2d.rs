@@ -1,9 +1,12 @@
 use std::cmp::{max, min};
 
+use derive_more::Display;
 use ncurses::{chtype, mvaddch};
+use thiserror::Error;
 
 /// Represents a coordinate in screen space
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, Display)]
+#[display(fmt = "(row {}, col {})", "row", "col")]
 pub struct Coordinate {
     pub row: i32,
     pub col: i32
@@ -66,13 +69,15 @@ pub fn draw_line(from: Coordinate, to: Coordinate, fill_char: char) {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
+#[error("Triangle render failed (part {part:?}). Parameters were: {top_start}/{bottom_start} -> {top_end}/{bottom_end}, caused by: {fill_err}")]
 pub struct TriangleFillErr {
     part: Option<i8>,
     top_start: Coordinate,
     top_end: Coordinate,
     bottom_start: Coordinate,
     bottom_end: Coordinate,
+    #[source]
     fill_err: RegionFillErr,
 }
 
@@ -159,9 +164,11 @@ pub fn fill_triangle(corner1: Coordinate, corner2: Coordinate, corner3: Coordina
     return Ok(());
 }
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum RegionFillErr {
+    #[error("Top and bottom were not aligned")]
     TopAndBottomDoNotAlign,
+    #[error("Top is below bottom")]
     TopIsBelowBottom,
 }
 

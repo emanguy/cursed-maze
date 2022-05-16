@@ -33,6 +33,16 @@ impl<'wall> ViewableEntity for Wall<'wall, 'wall> {
     }
 }
 
+impl<'wall> WorldEntity for Wall<'wall, 'wall> {
+    fn x_pos(&self) -> f64 {
+        (self.pillar1.x_pos + self.pillar2.x_pos) / 2.0
+    }
+
+    fn y_pos(&self) -> f64 {
+        (self.pillar1.y_pos + self.pillar2.y_pos) / 2.0
+    }
+}
+
 impl<'p1, 'p2> Wall<'p1, 'p2> {
     pub fn from_pillars(pillar1: &'p1 Pillar, pillar2: &'p2 Pillar) -> Wall<'p1, 'p2> {
         Wall { pillar1, pillar2 }

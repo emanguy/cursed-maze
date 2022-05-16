@@ -40,15 +40,7 @@ impl Scene {
 
         let mut visible_walls: Vec<&Wall> = walls.iter().filter(|&wall| camera.can_see_viewable(wall)).collect();
         visible_walls.sort_by_cached_key(|&wall| {
-            let wall_dist1 = camera.distance_to(wall.pillar1());
-            let wall_dist2 = camera.distance_to(wall.pillar2());
-
-            let lower_float = if wall_dist1 < wall_dist2 {
-                wall_dist1
-            } else {
-                wall_dist2
-            };
-            NotNan::new(lower_float).unwrap()
+            NotNan::new(camera.distance_to(wall)).expect("Distance to wall should not have been NaN but was")
         });
         visible_walls.reverse();
 
@@ -71,8 +63,8 @@ impl Scene {
                     let bottom_right_fillshift = right_pillar_coords.line_bottom.coord_shift(-1, -1);
 
                     // TODO do something with the results here
-                    fill_triangle(top_left_fillshift, bottom_left_fillshift, top_right_fillshift, '.');
-                    fill_triangle(bottom_left_fillshift, top_right_fillshift, bottom_right_fillshift, '.');
+                    let _ = fill_triangle(top_left_fillshift, bottom_left_fillshift, top_right_fillshift, '.');
+                    let _ = fill_triangle(bottom_left_fillshift, top_right_fillshift, bottom_right_fillshift, '.');
                 }
 
                 draw_line(pillar1_screen_coords.line_top, pillar1_screen_coords.line_bottom, '#');

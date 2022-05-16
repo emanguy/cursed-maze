@@ -100,7 +100,7 @@ mod maze_wall_tests {
     use std::collections::hash_map::DefaultHasher;
     use std::hash::{Hash, Hasher};
 
-    use super::{Maze, MazeCoordinate, MazeWall};
+    use super::*;
 
     /// Creates a tuple of two equivalent [MazeWall]s which have their coordinates reversed
     fn create_inverse_tuple(coord1: MazeCoordinate, coord2: MazeCoordinate) -> (MazeWall, MazeWall) {

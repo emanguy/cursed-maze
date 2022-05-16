@@ -17,7 +17,11 @@ pub struct MazeCoordinate {
 }
 
 impl MazeCoordinate {
-    pub fn random<T: Rng>(row_distribution: &Uniform<i32>, col_distribution: &Uniform<i32>, rng: &mut T) -> MazeCoordinate {
+    pub fn random<T: Rng>(
+        row_distribution: &Uniform<i32>,
+        col_distribution: &Uniform<i32>,
+        rng: &mut T,
+    ) -> MazeCoordinate {
         let row = row_distribution.sample(rng);
         let col = col_distribution.sample(rng);
 
@@ -31,7 +35,10 @@ impl MazeCoordinate {
     }
 
     pub fn moved(&self, row_change: i32, col_change: i32) -> MazeCoordinate {
-        MazeCoordinate { row: self.row + row_change, col: self.col + col_change }
+        MazeCoordinate {
+            row: self.row + row_change,
+            col: self.col + col_change,
+        }
     }
 }
 
@@ -47,8 +54,14 @@ mod maze_coordinate_tests {
         let point_behind_same_dist = MazeCoordinate { row: 3, col: 3 };
 
         assert_eq!(7, point.manhattan_to(&point_ahead));
-        assert_eq!(point.manhattan_to(&point_ahead), point.manhattan_to(&point_ahead_same_dist));
-        assert_eq!(point.manhattan_to(&point_ahead), point.manhattan_to(&point_behind_same_dist));
+        assert_eq!(
+            point.manhattan_to(&point_ahead),
+            point.manhattan_to(&point_ahead_same_dist)
+        );
+        assert_eq!(
+            point.manhattan_to(&point_ahead),
+            point.manhattan_to(&point_behind_same_dist)
+        );
     }
 }
 
@@ -65,8 +78,8 @@ pub struct MazeWall {
 
 impl PartialEq for MazeWall {
     fn eq(&self, other: &Self) -> bool {
-        (self.coord1 == other.coord1 && self.coord2 == other.coord2) ||
-            (self.coord1 == other.coord2 && self.coord2 == other.coord1)
+        (self.coord1 == other.coord1 && self.coord2 == other.coord2)
+            || (self.coord1 == other.coord2 && self.coord2 == other.coord1)
     }
 
     fn ne(&self, other: &Self) -> bool {
@@ -103,15 +116,32 @@ mod maze_wall_tests {
     use super::*;
 
     /// Creates a tuple of two equivalent [MazeWall]s which have their coordinates reversed
-    fn create_inverse_tuple(coord1: MazeCoordinate, coord2: MazeCoordinate) -> (MazeWall, MazeWall) {
-        (MazeWall { coord1, coord2 }, MazeWall { coord1: coord2, coord2: coord1 })
+    fn create_inverse_tuple(
+        coord1: MazeCoordinate,
+        coord2: MazeCoordinate,
+    ) -> (MazeWall, MazeWall) {
+        (
+            MazeWall { coord1, coord2 },
+            MazeWall {
+                coord1: coord2,
+                coord2: coord1,
+            },
+        )
     }
 
     fn verify_equality_and_hashing(test_cases: &[(MazeWall, MazeWall)]) {
-        test_cases.iter().for_each(| (first_wall, second_wall) | {
+        test_cases.iter().for_each(|(first_wall, second_wall)| {
             println!("Verify: {:?} with {:?}", first_wall, second_wall);
-            assert_eq!(first_wall, second_wall, "Equality: {:?} and {:?}", first_wall, second_wall);
-            assert_eq!(second_wall, first_wall, "Equality: {:?} and {:?}", second_wall, first_wall);
+            assert_eq!(
+                first_wall, second_wall,
+                "Equality: {:?} and {:?}",
+                first_wall, second_wall
+            );
+            assert_eq!(
+                second_wall, first_wall,
+                "Equality: {:?} and {:?}",
+                second_wall, first_wall
+            );
 
             let mut first_wall_hasher = DefaultHasher::new();
             let mut second_wall_hasher = DefaultHasher::new();
@@ -122,7 +152,11 @@ mod maze_wall_tests {
             let first_wall_hash = first_wall_hasher.finish();
             let second_wall_hash = second_wall_hasher.finish();
 
-            assert_eq!(first_wall_hash, second_wall_hash, "Hash comparison: {:?} and {:?}", first_wall, second_wall);
+            assert_eq!(
+                first_wall_hash, second_wall_hash,
+                "Hash comparison: {:?} and {:?}",
+                first_wall, second_wall
+            );
         });
     }
 
@@ -200,9 +234,8 @@ pub struct Maze {
     finish: MazeCoordinate,
     rows: i32,
     cols: i32,
-    wall_edges: HashSet<MazeWall>
+    wall_edges: HashSet<MazeWall>,
 }
-
 
 #[derive(Debug)]
 pub enum MazeParam {
@@ -213,10 +246,14 @@ pub enum MazeParam {
 
 #[derive(Debug, Error)]
 pub enum MazeConstructError {
-    #[error("A parameter was invalid: {param:?} cannot be {value:?}")]
+    #[error("A parameter was invalid: {param:?} cannot be {value}")]
     ParameterInvalid { param: MazeParam, value: i32 },
-    #[error("Maze was too small for the space between the portals (rows: {rows:?} cols: {cols:?} spacing: {portal_space:?}")]
-    MazeTooSmallForSpacing { rows: i32, cols: i32, portal_space: i32 },
+    #[error("Maze was too small for the space between the portals (rows: {rows} cols: {cols} spacing: {portal_space}")]
+    MazeTooSmallForSpacing {
+        rows: i32,
+        cols: i32,
+        portal_space: i32,
+    },
 }
 
 struct MazePortals {
@@ -248,7 +285,7 @@ impl Maze {
             return Err(MazeConstructError::ParameterInvalid { param, value });
         }
 
-        return Ok(())
+        return Ok(());
     }
 
     fn in_maze(point: &MazeCoordinate, rows: i32, cols: i32) -> bool {
@@ -282,7 +319,10 @@ impl Maze {
             let last_col = cols - 1;
             wall_set.insert(MazeWall {
                 coord1: MazeCoordinate { row, col: last_col },
-                coord2: MazeCoordinate { row: next_row, col: last_col },
+                coord2: MazeCoordinate {
+                    row: next_row,
+                    col: last_col,
+                },
             });
         }
 
@@ -292,7 +332,10 @@ impl Maze {
             let last_row = rows - 1;
             wall_set.insert(MazeWall {
                 coord1: MazeCoordinate { row: last_row, col },
-                coord2: MazeCoordinate { row: last_row, col: next_col },
+                coord2: MazeCoordinate {
+                    row: last_row,
+                    col: next_col,
+                },
             });
         }
         return wall_set;
@@ -306,51 +349,74 @@ impl Maze {
         let col_distribution = Uniform::from(0..cols);
 
         loop {
-            let point1 = MazeCoordinate::random(&row_distribution, &col_distribution, &mut shared_rng_engine);
-            let point2 = MazeCoordinate::random(&row_distribution, &col_distribution, &mut shared_rng_engine);
+            let point1 = MazeCoordinate::random(
+                &row_distribution,
+                &col_distribution,
+                &mut shared_rng_engine,
+            );
+            let point2 = MazeCoordinate::random(
+                &row_distribution,
+                &col_distribution,
+                &mut shared_rng_engine,
+            );
             let manhattan_distance = point1.manhattan_to(&point2);
 
             if manhattan_distance >= portal_space {
-                return MazePortals { start: point1, end: point2 };
+                return MazePortals {
+                    start: point1,
+                    end: point2,
+                };
             }
         }
     }
 
-    fn remove_walls_for_valid_maze(wall_set: &mut HashSet<MazeWall>, rows: i32, cols: i32, portals: &MazePortals) {
+    fn remove_walls_for_valid_maze(
+        wall_set: &mut HashSet<MazeWall>,
+        rows: i32,
+        cols: i32,
+        portals: &MazePortals,
+    ) {
         // Do a flood fill starting from the start point
         // If we run out of options to move, remove a wall
         // If we hit the endpoint, it's a valid maze. Stop removing walls.
         let mut rng = thread_rng();
 
         loop {
-            let mut move_space_queue: VecDeque<MazeCoordinate> = VecDeque::with_capacity((rows * cols / 2) as usize);
-            let mut flooded_cells: HashSet<MazeCoordinate> = HashSet::with_capacity((rows * cols * 3 / 4) as usize);
+            let mut move_space_queue: VecDeque<MazeCoordinate> =
+                VecDeque::with_capacity((rows * cols / 2) as usize);
+            let mut flooded_cells: HashSet<MazeCoordinate> =
+                HashSet::with_capacity((rows * cols * 3 / 4) as usize);
             move_space_queue.push_front(portals.start);
             flooded_cells.insert(portals.start);
 
             while let Some(coordinate) = move_space_queue.pop_back() {
                 // If we managed to flood from the start to the end it's a valid maze, return
                 if coordinate == portals.end {
-                    return
+                    return;
                 }
 
                 // Try to generate the next points to move to
                 for row_direction in -1..=1 {
                     for col_direction in -1..=1 {
                         if (row_direction as i32 + col_direction).abs() != 1 {
-                            continue
+                            continue;
                         }
 
                         let new_coordinate = coordinate.moved(row_direction, col_direction);
 
                         // Can't use this coordinate if it's not in the maze or one of the cells we've already flooded
-                        if !Self::in_maze(&new_coordinate, rows, cols) || flooded_cells.contains(&new_coordinate) {
-                            continue
+                        if !Self::in_maze(&new_coordinate, rows, cols)
+                            || flooded_cells.contains(&new_coordinate)
+                        {
+                            continue;
                         }
-                        let intended_move = MazeWall { coord1: coordinate, coord2: new_coordinate };
+                        let intended_move = MazeWall {
+                            coord1: coordinate,
+                            coord2: new_coordinate,
+                        };
                         // Can't move to the new space if there's a wall in the way
                         if wall_set.contains(&intended_move) {
-                            continue
+                            continue;
                         }
 
                         // This is a valid place we can move to, flood it and inspect later
@@ -374,7 +440,11 @@ impl Maze {
         Self::assert_positive(MazeParam::PortalSpacing, portal_space)?;
 
         if rows + cols < portal_space {
-            return Err(MazeConstructError::MazeTooSmallForSpacing { rows, cols, portal_space });
+            return Err(MazeConstructError::MazeTooSmallForSpacing {
+                rows,
+                cols,
+                portal_space,
+            });
         }
 
         let mut initial_walls = Self::generate_initial_walls(rows, cols);
@@ -391,7 +461,13 @@ impl Maze {
     }
 }
 
-fn render_maze_top_or_bottom(maze: &Maze, row: i32, left_corner_str: &str, right_corner_str: &str, divide_tee: &str) -> String {
+fn render_maze_top_or_bottom(
+    maze: &Maze,
+    row: i32,
+    left_corner_str: &str,
+    right_corner_str: &str,
+    divide_tee: &str,
+) -> String {
     let mut maze_border = String::from(left_corner_str);
     maze_border.push_str(box_display::BAR_HORIZ);
 
@@ -413,11 +489,23 @@ fn render_maze_top_or_bottom(maze: &Maze, row: i32, left_corner_str: &str, right
 }
 
 fn render_maze_top(maze: &Maze) -> String {
-    render_maze_top_or_bottom(maze, 0, box_display::CORNER_TL, box_display::CORNER_TR, box_display::TEE_DOWN)
+    render_maze_top_or_bottom(
+        maze,
+        0,
+        box_display::CORNER_TL,
+        box_display::CORNER_TR,
+        box_display::TEE_DOWN,
+    )
 }
 
 fn render_maze_bottom(maze: &Maze) -> String {
-    render_maze_top_or_bottom(maze, maze.rows - 1, box_display::CORNER_BL, box_display::CORNER_BR, box_display::TEE_UP)
+    render_maze_top_or_bottom(
+        maze,
+        maze.rows - 1,
+        box_display::CORNER_BL,
+        box_display::CORNER_BR,
+        box_display::TEE_UP,
+    )
 }
 
 fn render_maze_cell_content(maze: &Maze, row: i32) -> String {
@@ -461,8 +549,14 @@ fn render_maze_cell_content(maze: &Maze, row: i32) -> String {
 fn render_maze_cell_divider(maze: &Maze, initial_row: i32) -> String {
     let mut divider = String::new();
     let initial_wall_test = MazeWall {
-        coord1: MazeCoordinate { row: initial_row, col: 0 },
-        coord2: MazeCoordinate { row: initial_row + 1, col: 0 },
+        coord1: MazeCoordinate {
+            row: initial_row,
+            col: 0,
+        },
+        coord2: MazeCoordinate {
+            row: initial_row + 1,
+            col: 0,
+        },
     };
 
     if maze.wall_edges.contains(&initial_wall_test) {
@@ -473,20 +567,44 @@ fn render_maze_cell_divider(maze: &Maze, initial_row: i32) -> String {
 
     for col in 0..(maze.cols - 1) {
         let vert_wall_test = MazeWall {
-            coord1: MazeCoordinate { row: initial_row, col },
-            coord2: MazeCoordinate { row: initial_row + 1, col },
+            coord1: MazeCoordinate {
+                row: initial_row,
+                col,
+            },
+            coord2: MazeCoordinate {
+                row: initial_row + 1,
+                col,
+            },
         };
         let vert_wall_test_next = MazeWall {
-            coord1: MazeCoordinate { row: initial_row, col: col + 1 },
-            coord2: MazeCoordinate { row: initial_row + 1, col: col + 1},
+            coord1: MazeCoordinate {
+                row: initial_row,
+                col: col + 1,
+            },
+            coord2: MazeCoordinate {
+                row: initial_row + 1,
+                col: col + 1,
+            },
         };
         let horiz_wall_test_upper = MazeWall {
-            coord1: MazeCoordinate { row: initial_row, col },
-            coord2: MazeCoordinate { row: initial_row, col: col + 1 },
+            coord1: MazeCoordinate {
+                row: initial_row,
+                col,
+            },
+            coord2: MazeCoordinate {
+                row: initial_row,
+                col: col + 1,
+            },
         };
         let horiz_wall_test_lower = MazeWall {
-            coord1: MazeCoordinate { row: initial_row + 1, col },
-            coord2: MazeCoordinate { row: initial_row + 1, col: col + 1 },
+            coord1: MazeCoordinate {
+                row: initial_row + 1,
+                col,
+            },
+            coord2: MazeCoordinate {
+                row: initial_row + 1,
+                col: col + 1,
+            },
         };
 
         let left_vert_wall_exists = maze.wall_edges.contains(&vert_wall_test);
@@ -502,7 +620,12 @@ fn render_maze_cell_divider(maze: &Maze, initial_row: i32) -> String {
         }
 
         // This is gross and I really should've learned the unicode bits for generating box borders
-        let corner_divide = match (left_vert_wall_exists, right_vert_wall_exists, top_horiz_wall_exists, bottom_horiz_wall_exists) {
+        let corner_divide = match (
+            left_vert_wall_exists,
+            right_vert_wall_exists,
+            top_horiz_wall_exists,
+            bottom_horiz_wall_exists,
+        ) {
             (true, true, true, true) => box_display::QUAD,
             (true, true, true, false) => box_display::TEE_UP,
             (true, true, false, true) => box_display::TEE_DOWN,
@@ -514,18 +637,24 @@ fn render_maze_cell_divider(maze: &Maze, initial_row: i32) -> String {
             (false, true, true, false) => box_display::CORNER_BL,
             (false, true, false, true) => box_display::CORNER_TL,
             (false, false, true, true) => box_display::BAR_VERT,
-            (true, false, false, false) |
-                (false, true, false, false) |
-                (false, false, true, false) |
-                (false, false, false, true) |
-                (false, false, false, false) => " ",
+            (true, false, false, false)
+            | (false, true, false, false)
+            | (false, false, true, false)
+            | (false, false, false, true)
+            | (false, false, false, false) => " ",
         };
         divider.push_str(corner_divide);
     }
 
     let last_wall_test = MazeWall {
-        coord1: MazeCoordinate { row: initial_row, col: maze.cols - 1 },
-        coord2: MazeCoordinate { row: initial_row + 1, col: maze.cols - 1 },
+        coord1: MazeCoordinate {
+            row: initial_row,
+            col: maze.cols - 1,
+        },
+        coord2: MazeCoordinate {
+            row: initial_row + 1,
+            col: maze.cols - 1,
+        },
     };
     if maze.wall_edges.contains(&last_wall_test) {
         divider.push_str(box_display::BAR_HORIZ);
@@ -567,10 +696,10 @@ mod maze_tests {
         let unwrapped_maze = maze.unwrap();
         println!(
             "{}\n Start: {:?}\n End: {:?}\n Manhattan Distance: {}",
-             unwrapped_maze,
-             unwrapped_maze.start,
-             unwrapped_maze.finish,
-             unwrapped_maze.start.manhattan_to(&unwrapped_maze.finish),
+            unwrapped_maze,
+            unwrapped_maze.start,
+            unwrapped_maze.finish,
+            unwrapped_maze.start.manhattan_to(&unwrapped_maze.finish),
         );
     }
 }

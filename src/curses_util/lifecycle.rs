@@ -10,7 +10,7 @@ impl CursesHandle {
         nodelay(stdscr(), true);
         keypad(stdscr(), true);
 
-        return CursesHandle{}
+        return CursesHandle {};
     }
 }
 impl Drop for CursesHandle {

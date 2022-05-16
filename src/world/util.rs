@@ -7,7 +7,11 @@ pub fn normalize_range(original_value: f64, range: Range<f64>) -> f64 {
     let range_width = range.end - range.start;
     let aligned_value = original_value - range.start;
     let normalized_value = aligned_value % range_width;
-    let normalized_angle = if normalized_value > 0.0 { normalized_value } else { normalized_value + range_width };
+    let normalized_angle = if normalized_value > 0.0 {
+        normalized_value
+    } else {
+        normalized_value + range_width
+    };
 
     return normalized_angle + range.start;
 }

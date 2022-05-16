@@ -27,7 +27,7 @@ jobs:
       - image: cimg/rust:1.60
     steps:
       - cargo-install:
-          package: nextest
+          package: cargo-nextest
       - checkout
       - rust/build
       - run: 

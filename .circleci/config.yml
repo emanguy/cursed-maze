@@ -23,7 +23,8 @@ commands:
 
 jobs:
   build-and-test:
-    executor: rust/default
+    docker:
+      image: cimg/rust:1.60
     steps:
       - cargo-install:
           package: nextest

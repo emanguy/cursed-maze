@@ -24,7 +24,7 @@ commands:
 jobs:
   build-and-test:
     docker:
-      image: cimg/rust:1.60
+      - image: cimg/rust:1.60
     steps:
       - cargo-install:
           package: nextest

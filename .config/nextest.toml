@@ -1,0 +1,5 @@
+[store]
+dir = "test-results"
+
+[profile.default]
+junit.path = "results.xml"

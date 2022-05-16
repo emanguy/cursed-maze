@@ -1,0 +1,41 @@
+version: 2.1
+
+orbs:
+  rust: circleci/rust@1.6
+
+commands:
+  cargo-install:
+    parameters:
+      package:
+        type: string
+        description: The name of the binary to install through cargo
+    steps:
+      - restore_cache:
+          key: install-v1
+      - run:
+          name: Install << parameters.package >>
+          command: |
+            cargo install << parameters.package >>
+      - save_cache:
+          key: install-v1
+          paths:
+            - ~/.cargo/bin/
+
+jobs:
+  build-and-test:
+    executor: rust/default
+    steps:
+      - cargo-install:
+          package: nextest
+      - checkout
+      - rust/build
+      - run: 
+          name: "Run tests"
+          command: cargo nextest run
+      - store_test_results:
+          path: test-results/default
+
+workflows:
+  standard:
+    jobs:
+      - build-and-test

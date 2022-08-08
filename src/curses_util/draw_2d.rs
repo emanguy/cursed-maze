@@ -1,18 +1,24 @@
 use std::cmp::{max, min};
 
+use derive_more::Display;
 use ncurses::{chtype, mvaddch};
+use thiserror::Error;
 
 /// Represents a coordinate in screen space
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, Display)]
+#[display(fmt = "(row {}, col {})", "row", "col")]
 pub struct Coordinate {
     pub row: i32,
-    pub col: i32
+    pub col: i32,
 }
 
 impl Coordinate {
     /// Return a new coordinate shifted by (row_change, col_change)
     pub fn coord_shift(self, row_change: i32, col_change: i32) -> Coordinate {
-        Coordinate { row: self.row + row_change, col: self.col + col_change }
+        Coordinate {
+            row: self.row + row_change,
+            col: self.col + col_change,
+        }
     }
 }
 
@@ -66,21 +72,29 @@ pub fn draw_line(from: Coordinate, to: Coordinate, fill_char: char) {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
+#[error("Triangle render failed (part {part:?}). Parameters were: {top_start}/{bottom_start} -> {top_end}/{bottom_end}, caused by: {fill_err}")]
 pub struct TriangleFillErr {
     part: Option<i8>,
     top_start: Coordinate,
     top_end: Coordinate,
     bottom_start: Coordinate,
     bottom_end: Coordinate,
+    #[source]
     fill_err: RegionFillErr,
 }
 
 /// Fill a triangular region on the screen between 3 arbitrary points with the given fill character (fill_char)
-pub fn fill_triangle(corner1: Coordinate, corner2: Coordinate, corner3: Coordinate, fill_char: char) -> Result<(), TriangleFillErr> {
-    let mut sorted_corners = vec!(&corner1, &corner2, &corner3);
+pub fn fill_triangle(
+    corner1: Coordinate,
+    corner2: Coordinate,
+    corner3: Coordinate,
+    fill_char: char,
+) -> Result<(), TriangleFillErr> {
+    let mut sorted_corners = vec![&corner1, &corner2, &corner3];
     sorted_corners.sort_by(|corner_a, corner_b| corner_a.col.cmp(&corner_b.col));
-    let (corner_lowcol, corner_midcol, corner_highcol) = (sorted_corners[0], sorted_corners[1], sorted_corners[2]);
+    let (corner_lowcol, corner_midcol, corner_highcol) =
+        (sorted_corners[0], sorted_corners[1], sorted_corners[2]);
 
     // Draw lines if the coordinates are all in a line
     if corner_lowcol.row == corner_midcol.row && corner_lowcol.row == corner_highcol.row {
@@ -88,14 +102,34 @@ pub fn fill_triangle(corner1: Coordinate, corner2: Coordinate, corner3: Coordina
         return Ok(());
     }
     if corner_lowcol.col == corner_midcol.col && corner_lowcol.col == corner_highcol.col {
-        let lowest_row = min(min(corner_lowcol.row, corner_midcol.row), min(corner_lowcol.row, corner_highcol.row));
-        let highest_row = max(max(corner_lowcol.row, corner_midcol.row), max(corner_lowcol.row, corner_highcol.row));
+        let lowest_row = min(
+            min(corner_lowcol.row, corner_midcol.row),
+            min(corner_lowcol.row, corner_highcol.row),
+        );
+        let highest_row = max(
+            max(corner_lowcol.row, corner_midcol.row),
+            max(corner_lowcol.row, corner_highcol.row),
+        );
 
-        draw_line(Coordinate { row: lowest_row, col: corner_lowcol.col }, Coordinate { row: highest_row, col: corner_lowcol.col }, fill_char);
+        draw_line(
+            Coordinate {
+                row: lowest_row,
+                col: corner_lowcol.col,
+            },
+            Coordinate {
+                row: highest_row,
+                col: corner_lowcol.col,
+            },
+            fill_char,
+        );
         return Ok(());
     }
 
-    let mapped_fill_region = |part: Option<i8>, top_start: &Coordinate, top_end: &Coordinate, bottom_start: &Coordinate, bottom_end: &Coordinate| {
+    let mapped_fill_region = |part: Option<i8>,
+                              top_start: &Coordinate,
+                              top_end: &Coordinate,
+                              bottom_start: &Coordinate,
+                              bottom_end: &Coordinate| {
         fill_region_between_lines(*top_start, *top_end, *bottom_start, *bottom_end, fill_char)
             .map_err(|err| TriangleFillErr {
                 part,
@@ -134,10 +168,14 @@ pub fn fill_triangle(corner1: Coordinate, corner2: Coordinate, corner3: Coordina
     }
 
     // Otherwise break the triangle up into two regions and draw each
-    let longline_slope = (corner_highcol.row - corner_lowcol.row) as f64 / (corner_highcol.col - corner_lowcol.col) as f64;
+    let longline_slope = (corner_highcol.row - corner_lowcol.row) as f64
+        / (corner_highcol.col - corner_lowcol.col) as f64;
     let midpoint_distance = corner_midcol.col - corner_lowcol.col;
     let midpoint_rowchange = (longline_slope * midpoint_distance as f64) as i32;
-    let second_midpoint = Coordinate { row: corner_lowcol.row + midpoint_rowchange, col: corner_midcol.col };
+    let second_midpoint = Coordinate {
+        row: corner_lowcol.row + midpoint_rowchange,
+        col: corner_midcol.col,
+    };
 
     // If the middle point is on the line between the low col corner and high col corner, just draw a line
     if second_midpoint.row == corner_midcol.row {
@@ -153,20 +191,40 @@ pub fn fill_triangle(corner1: Coordinate, corner2: Coordinate, corner3: Coordina
     };
 
     // Draw the 2 regions
-    mapped_fill_region(Some(1), corner_lowcol, upper_midpoint, corner_lowcol, lower_midpoint)?;
-    mapped_fill_region(Some(2), upper_midpoint, corner_highcol, lower_midpoint, corner_highcol)?;
+    mapped_fill_region(
+        Some(1),
+        corner_lowcol,
+        upper_midpoint,
+        corner_lowcol,
+        lower_midpoint,
+    )?;
+    mapped_fill_region(
+        Some(2),
+        upper_midpoint,
+        corner_highcol,
+        lower_midpoint,
+        corner_highcol,
+    )?;
 
     return Ok(());
 }
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum RegionFillErr {
+    #[error("Top and bottom were not aligned")]
     TopAndBottomDoNotAlign,
+    #[error("Top is below bottom")]
     TopIsBelowBottom,
 }
 
 /// Fill the area between 2 horizontal lines with the given fill character (fill_char)
-fn fill_region_between_lines(top_line_start: Coordinate, top_line_end: Coordinate, bottom_line_start: Coordinate, bottom_line_end: Coordinate, fill_char: char) -> Result<(), RegionFillErr> {
+fn fill_region_between_lines(
+    top_line_start: Coordinate,
+    top_line_end: Coordinate,
+    bottom_line_start: Coordinate,
+    bottom_line_end: Coordinate,
+    fill_char: char,
+) -> Result<(), RegionFillErr> {
     // Find leftmost points
     let (top_leftmost, top_rightmost) = if top_line_start.col > top_line_end.col {
         (&top_line_end, &top_line_start)

@@ -2,6 +2,8 @@ use std::f64::consts::PI;
 use std::thread::sleep;
 use std::time::Duration;
 
+use ordered_float::NotNan;
+
 use ncurses::*;
 
 use super::curses_util::draw_2d::*;
@@ -36,7 +38,13 @@ impl Scene {
     pub fn render_frame(&self, camera: &Camera, walls: &Vec<Wall>) {
         clear();
 
-        for wall in walls {
+        let mut visible_walls: Vec<&Wall> = walls.iter().filter(|&wall| camera.can_see_viewable(wall)).collect();
+        visible_walls.sort_by_cached_key(|&wall| {
+            NotNan::new(camera.distance_to(wall)).expect("Distance to wall should not have been NaN but was")
+        });
+        visible_walls.reverse();
+
+        for wall in visible_walls {
             if camera.can_see_viewable(wall) {
                 let pillar1_screen_coords = self.calculate_pillar_coords(camera, wall.pillar1());
                 let pillar2_screen_coords = self.calculate_pillar_coords(camera, wall.pillar2());
@@ -55,8 +63,8 @@ impl Scene {
                     let bottom_right_fillshift = right_pillar_coords.line_bottom.coord_shift(-1, -1);
 
                     // TODO do something with the results here
-                    fill_triangle(top_left_fillshift, bottom_left_fillshift, top_right_fillshift, '.');
-                    fill_triangle(bottom_left_fillshift, top_right_fillshift, bottom_right_fillshift, '.');
+                    let _ = fill_triangle(top_left_fillshift, bottom_left_fillshift, top_right_fillshift, '.');
+                    let _ = fill_triangle(bottom_left_fillshift, top_right_fillshift, bottom_right_fillshift, '.');
                 }
 
                 draw_line(pillar1_screen_coords.line_top, pillar1_screen_coords.line_bottom, '#');

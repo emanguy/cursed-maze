@@ -1,0 +1,39 @@
+version: 2.1
+
+commands:
+  rust_build:
+    parameters:
+      cache_bust_version:
+        type: string
+        default: v1
+    steps:
+      - restore_cache:
+          keys:
+            - debug-compile
+      - run:
+          name: Build code
+          command: cargo build
+      - save_cache:
+          key: debug-compile-{{ checksum "Cargo.lock" }}-<< parameters.cache_bust_version >>
+          paths:
+            - target/debug
+            - ~/.cargo
+
+
+jobs:
+  build-and-test:
+    docker:
+      - image: ghcr.io/emanguy/rust-ci:1.1.0
+    steps:
+      - checkout
+      - rust_build
+      - run: 
+          name: "Run tests"
+          command: cargo nextest run
+      - store_test_results:
+          path: test-results/default
+
+workflows:
+  standard:
+    jobs:
+      - build-and-test

@@ -58,7 +58,8 @@ impl Camera {
 
     /// Determines the angle from the center of the view frustum that the entity appears at to the camera
     pub fn view_angle_from_center(&self, other: &impl WorldEntity) -> f64 {
-        let camera_vector_angle = (other.y_pos() - self.y_pos()).atan2(other.x_pos() - self.x_pos());
+        let camera_vector_angle =
+            (other.y_pos() - self.y_pos()).atan2(other.x_pos() - self.x_pos());
 
         return self.facing_direction - camera_vector_angle;
     }
@@ -69,7 +70,8 @@ impl Camera {
         let view_angle_from_center = normalize_range(angle_to_other, -PI..PI);
         let half_fov_angle = self.fov_angle / 2.0;
 
-        return (-half_fov_angle..half_fov_angle).contains(&view_angle_from_center) && self.distance_to(other) < self.horizon_distance
+        return (-half_fov_angle..half_fov_angle).contains(&view_angle_from_center)
+            && self.distance_to(other) < self.horizon_distance;
     }
 
     /// Returns true if the camera can see the other entity using the entity's implementation
@@ -92,6 +94,3 @@ impl Camera {
         return cam_copy;
     }
 }
-
-
-
